@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章详情 - 博客系统</title>
+    <link href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <style>
+        .post-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+        .post-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .related-posts {
+            margin-top: 3rem;
+        }
+        .comments-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .comment {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">我的博客</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/categories">分类</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">关于</a>
+                    </li>
+                </ul>
+                <div class="navbar-nav" id="auth-nav">
+                    <!-- 登录状态将通过JavaScript动态更新 -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-lg-8">
+                <article class="blog-post">
+                    <h1 class="blog-post-title" id="post-title"></h1>
+                    <div class="post-meta mb-4">
+                        <span class="me-3" id="post-author"></span>
+                        <span class="me-3" id="post-date"></span>
+                        <span id="post-category"></span>
+                    </div>
+                    <div class="post-content" id="post-content">
+                        <!-- 文章内容将通过JavaScript动态加载 -->
+                    </div>
+                    <div class="post-tags mt-4" id="post-tags">
+                        <!-- 文章标签将通过JavaScript动态加载 -->
+                    </div>
+                </article>
+
+                <div class="related-posts">
+                    <h3 class="mb-4">相关文章</h3>
+                    <div class="row" id="related-posts-container">
+                        <!-- 相关文章将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+
+                <div class="comments-section">
+                    <h3 class="mb-4">评论</h3>
+                    <div id="comments-container">
+                        <!-- 评论将通过JavaScript动态加载 -->
+                    </div>
+                    <div class="comment-form mt-4" id="comment-form-container">
+                        <form id="comment-form">
+                            <div class="mb-3">
+                                <textarea class="form-control" id="comment-content" rows="3" placeholder="写下你的评论..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">发表评论</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header">作者信息</div>
+                    <div class="card-body" id="author-info">
+                        <!-- 作者信息将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">热门文章</div>
+                    <div class="card-body">
+                        <ul class="list-unstyled" id="popular-posts">
+                            <!-- 热门文章将通过JavaScript动态加载 -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2024 我的博客. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script>
+        // 获取文章ID
+        const postId = window.location.pathname.split('/').pop();
+
+        // 加载文章详情
+        async function loadPostDetails() {
+            try {
+                const response = await fetch(`/api/posts/${postId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('post-title').textContent = data.title;
+                    document.getElementById('post-author').textContent = `作者：${data.author}`;
+                    document.getElementById('post-date').textContent = `发布时间：${new Date(data.created_at).toLocaleDateString()}`;
+                    document.getElementById('post-category').textContent = `分类：${data.category}`;
+                    document.getElementById('post-content').innerHTML = data.content;
+
+                    // 加载标签
+                    if (data.tags && data.tags.length > 0) {
+                        const tagsHtml = data.tags.map(tag => 
+                            `<span class="badge bg-secondary me-2">${tag}</span>`
+                        ).join('');
+                        document.getElementById('post-tags').innerHTML = tagsHtml;
+                    }
+
+                    // 加载作者信息
+                    loadAuthorInfo(data.author_id);
+                    // 加载相关文章
+                    loadRelatedPosts(data.category_id);
+                    // 加载评论
+                    loadComments();
+                    // 加载热门文章
+                    loadPopularPosts();
+                }
+            } catch (error) {
+                console.error('加载文章详情失败:', error);
+            }
+        }
+
+        // 加载作者信息
+        async function loadAuthorInfo(authorId) {
+            try {
+                const response = await fetch(`/api/users/${authorId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('author-info').innerHTML = `
+                        <h5 class="card-title">${data.username}</h5>
+                        <p class="card-text">${data.bio || '这个作者很懒，还没有填写简介'}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载作者信息失败:', error);
+            }
+        }
+
+        // 加载相关文章
+        async function loadRelatedPosts(categoryId) {
+            try {
+                const response = await fetch(`/api/posts/related/${postId}?category=${categoryId}`);
+                const data = await response.json();
+
+                if (response.ok && data.length > 0) {
+                    const relatedPostsHtml = data.map(post => `
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <a href="/posts/${post.id}" class="text-decoration-none">${post.title}</a>
+                                    </h5>
+                                    <p class="card-text text-muted">${post.summary}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('related-posts-container').innerHTML = relatedPostsHtml;
+                }
+            } catch (error) {
+                console.error('加载相关文章失败:', error);
+            }
+        }
+
+        // 加载评论
+        async function loadComments() {
+            try {
+                const response = await fetch(`/api/posts/${postId}/comments`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    const commentsHtml = data.map(comment => `
+                        <div class="comment">
+                            <div class="d-flex justify-content-between">
+                                <h5 class="mb-1">${comment.author}</h5>
+                                <small class="text-muted">${new Date(comment.created_at).toLocaleString()}</small>
+                            </div>
+                            <p class="mb-1">${comment.content}</p>
+                        </div>
+                    `).join('');
+                    document.getElementById('comments-container').innerHTML = commentsHtml;
+                }
+            } catch (error) {
+                console.error('加载评论失败:', error);
+            }
+        }
+
+        // 加载热门文章
+        async function loadPopularPosts() {
+            try {
+                const response = await fetch('/api/posts/popular');
+                const data = await response.json();
+
+                if (response.ok && data.length > 0) {
+                    const popularPostsHtml = data.map(post => `
+                        <li class="mb-2">
+                            <a href="/posts/${post.id}" class="text-decoration-none">${post.title}</a>
+                        </li>
+                    `).join('');
+                    document.getElementById('popular-posts').innerHTML = popularPostsHtml;
+                }
+            } catch (error) {
+                console.error('加载热门文章失败:', error);
+            }
+        }
+
+        // 提交评论
+        document.getElementById('comment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('comment-content').value;
+
+            try {
+                const response = await fetch(`/api/posts/${postId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ content })
+                });
+
+                if (response.ok) {
+                    document.getElementById('comment-content').value = '';
+                    loadComments(); // 重新加载评论
+                } else {
+                    const data = await response.json();
+                    alert(data.error || '发表评论失败');
+                }
+            } catch (error) {
+                console.error('提交评论失败:', error);
+                alert('网络错误，请稍后重试');
+            }
+        });
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPostDetails();
+        });
+    </script>
+</body>
+</html>
