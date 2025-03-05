@@ -67,14 +67,7 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error_type": "weak_password", "message": "密码长度至少8位"})
 		return
 	}
-	if !regexp.MustCompile(`[A-Z]`).MatchString(req.Password) {
-		c.JSON(http.StatusBadRequest, gin.H{"error_type": "weak_password", "message": "必须包含至少一个大写字母"})
-		return
-	}
-	if !regexp.MustCompile(`\d`).MatchString(req.Password) {
-		c.JSON(http.StatusBadRequest, gin.H{"error_type": "weak_password", "message": "必须包含至少一个数字"})
-		return
-	}
+
 
 	// 检查用户名是否已存在
 	var existingUser models.User
@@ -115,7 +108,7 @@ func Register(c *gin.Context) {
 		"user": gin.H{
 			"id": user.ID,
 			"username": user.Username,
-			"email": user.Email
-		}
+			"email": user.Email,
+		},
 	})
 }
