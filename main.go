@@ -42,7 +42,7 @@ func main() {
 		c.HTML(http.StatusOK, "about.html", nil)
 	})
 	// 添加博客详情页面路由
-	r.GET("/post/:id", func(c *gin.Context) {
+	r.GET("/posts/:id", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "post.html", nil)
 	})
 

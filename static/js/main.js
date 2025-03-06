@@ -18,6 +18,25 @@ function updateNavbar() {
     }
 }
 
+// 更新导航栏高亮状态
+function updateActiveNavItem() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+    
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+        }
+    });
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    updateNavbar();
+    updateActiveNavItem();
+});
+
 // 加载文章列表
 async function loadPosts(page = 1) {
     try {
